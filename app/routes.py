@@ -6,14 +6,16 @@ from app.forms import RegistrationForm
 from flask_login import current_user, login_user, logout_user, login_required
 from app.models import User
 
-
-@app.route('/index')
-@login_required
-def index():
-    user = {'username'}
-    return render_template('index.html', title='Home', user=user)
-
 @app.route('/')
+@app.route('/index')
+def index():
+    if current_user.is_authenticated:
+        user = {'username'}
+        return render_template('index.html', title='Home', user=user)
+    else:
+        return render_template('welcome.html', title='Tilda')
+
+
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if current_user.is_authenticated:
@@ -28,10 +30,12 @@ def login():
         return redirect(url_for('index'))
     return render_template('login.html', title='Sign In', form=form)
 
+
 @app.route('/logout')
 def logout():
     logout_user()
-    return redirect(url_for('index'))
+    return redirect(url_for('login'))
+
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -46,3 +50,10 @@ def register():
         flash('Congratulations, you are now a registered user!')
         return redirect(url_for('login'))
     return render_template('register.html', title='Register', form=form)
+
+
+@app.route('/user/<username>')
+@login_required
+def user(username):
+    user = User.query.filter_by(username=username).first_or_404()
+    return render_template('user.html', user=user)
